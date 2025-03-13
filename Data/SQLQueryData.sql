@@ -11,6 +11,7 @@ CREATE TABLE Users (
     CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP,
 	Status bit default 1
 );
+go
 
 -- Chèn dữ liệu mẫu với 20 người dùng
 INSERT INTO Users (FullName, PhoneNumber, Email) VALUES
@@ -34,3 +35,84 @@ INSERT INTO Users (FullName, PhoneNumber, Email) VALUES
 (N'Chu Thị Tâm', '0989012354', 'chuthitam@gmail.com'),
 (N'Dương Văn Ứng', '0990123465', 'duongvanung@gmail.com'),
 (N'Võ Thị Xuân', '0901234576', 'vothixuan@gmail.com');
+go
+
+-- Procedure 1: Lấy tất cả người dùng
+CREATE PROCEDURE GetAllUsers as
+BEGIN
+    SELECT UserID, FullName, PhoneNumber, Email, CreatedDate, Status 
+    FROM Users 
+    WHERE Status = 1
+    ORDER BY FullName;
+END
+go
+
+-- Procedure 2: Lấy thông tin người dùng theo ID
+CREATE PROCEDURE GetUserByID
+    @UserID INT
+AS
+BEGIN
+    SELECT UserID, FullName, PhoneNumber, Email, CreatedDate, Status 
+    FROM Users 
+    WHERE UserID = @UserID AND Status = 1;
+END
+GO
+
+-- Procedure 3: Tìm kiếm người dùng theo tên, số điện thoại hoặc email
+CREATE PROCEDURE SearchUsers
+    @SearchTerm VARCHAR(100)
+AS
+BEGIN
+    SET @SearchTerm = '%' + @SearchTerm + '%';
+    
+    SELECT UserID, FullName, PhoneNumber, Email, CreatedDate, Status 
+    FROM Users 
+    WHERE (FullName LIKE @SearchTerm 
+           OR PhoneNumber LIKE @SearchTerm 
+           OR Email LIKE @SearchTerm)
+          AND Status = 1
+    ORDER BY FullName;
+END
+GO
+
+-- Procedure 4: Thêm người dùng mới
+CREATE PROCEDURE AddUser
+    @FullName NVARCHAR(100),
+    @PhoneNumber VARCHAR(20),
+    @Email VARCHAR(100),
+    @UserID INT OUTPUT
+AS
+BEGIN
+    INSERT INTO Users (FullName, PhoneNumber, Email)
+    VALUES (@FullName, @PhoneNumber, @Email);
+    
+    SET @UserID = SCOPE_IDENTITY();
+END
+GO
+
+-- Procedure 5: Cập nhật thông tin người dùng
+CREATE PROCEDURE UpdateUser
+    @UserID INT,
+    @FullName NVARCHAR(100),
+    @PhoneNumber VARCHAR(20),
+    @Email VARCHAR(100)
+AS
+BEGIN
+    UPDATE Users
+    SET FullName = @FullName,
+        PhoneNumber = @PhoneNumber,
+        Email = @Email
+    WHERE UserID = @UserID;
+END
+GO
+
+-- Procedure 6: Xóa người dùng (xóa mềm - chỉ cập nhật trạng thái)
+CREATE PROCEDURE DeleteUser
+    @UserID INT
+AS
+BEGIN
+    UPDATE Users
+    SET Status = 0
+    WHERE UserID = @UserID;
+END
+GO
