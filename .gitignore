@@ -1,0 +1,25 @@
+# Visual Studio Code
+.vscode/
+
+# .NET
+**/bin
+**/obj
+**/project.lock.json
+**/project.fragment.lock.json
+**/artifacts/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Auto-generated files
+*.log
+*.tlog
+*.vspscc
+*.vssscc
+
+# Others
+**/*.DS_Store
