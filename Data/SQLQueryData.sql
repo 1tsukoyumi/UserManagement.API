@@ -116,3 +116,96 @@ BEGIN
     WHERE UserID = @UserID;
 END
 GO
+
+-- Procedure 7: khôi phục người dùng sau khi xóa mềm (điều chỉnh lại status)
+CREATE PROCEDURE RestoreDeletedUsers
+AS
+BEGIN
+    UPDATE Users
+    SET status = 1
+    WHERE status = 0;
+
+    -- Trả về số lượng user đã được khôi phục
+    SELECT @@ROWCOUNT AS RestoredUsersCount;
+END
+GO
+-- Procedure 8: xóa vĩnh viễn người dùng sau 30 ngày không khôi phục
+-- Dùng SQL Server Agent để tự động hóa việc chạy procedure nàyATE PROCEDURE SearchUsers
+    @SearchTerm VARCHAR(100)
+AS
+BEGIN
+    SET @SearchTerm = '%' + @SearchTerm + '%';
+    
+    SELECT UserID, FullName, PhoneNumber, Email, CreatedDate, Status 
+    FROM Users 
+    WHERE (FullName LIKE @SearchTerm 
+           OR PhoneNumber LIKE @SearchTerm 
+           OR Email LIKE @SearchTerm)
+          AND Status = 1
+    ORDER BY FullName;
+END
+GO
+
+-- Procedure 4: Thêm người dùng mới
+CREATE PROCEDURE AddUser
+    @FullName NVARCHAR(100),
+    @PhoneNumber VARCHAR(20),
+    @Email VARCHAR(100),
+    @UserID INT OUTPUT
+AS
+BEGIN
+    INSERT INTO Users (FullName, PhoneNumber, Email)
+    VALUES (@FullName, @PhoneNumber, @Email);
+    
+    SET @UserID = SCOPE_IDENTITY();
+END
+GO
+
+-- Procedure 5: Cập nhật thông tin người dùng
+CREATE PROCEDURE UpdateUser
+    @UserID INT,
+    @FullName NVARCHAR(100),
+    @PhoneNumber VARCHAR(20),
+    @Email VARCHAR(100)
+AS
+BEGIN
+    UPDATE Users
+    SET FullName = @FullName,
+        PhoneNumber = @PhoneNumber,
+        Email = @Email
+    WHERE UserID = @UserID;
+END
+GO
+
+-- Procedure 6: Xóa người dùng (xóa mềm - chỉ cập nhật trạng thái)
+CREATE PROCEDURE DeleteUser
+    @UserID INT
+AS
+BEGIN
+    UPDATE Users
+    SET Status = 0
+    WHERE UserID = @UserID;
+END
+GO
+
+-- Procedure 7: khôi phục người dùng sau khi xóa mềm (điều chỉnh lại status)
+CREATE PROCEDURE RestoreDeletedUsers
+AS
+BEGIN
+    UPDATE Users
+    SET status = 1
+    WHERE status = 0;
+
+    -- Trả về số lượng user đã được khôi phục
+    SELECT @@ROWCOUNT AS RestoredUsersCount;
+END
+GO
+-- Procedure 8: xóa vĩnh viễn người dùng sau 30 ngày không khôi phục
+-- Dùng SQL Server Agent để tự động hóa việc chạy procedure này
+CREATE PROCEDURE PermanentlyDeleteUsers
+AS
+BEGIN
+    DELETE FROM Users
+    WHERE Status = 0 AND DATEDIFF(DAY, CreatedDate, GETDATE()) > 30;
+END;
+GO
